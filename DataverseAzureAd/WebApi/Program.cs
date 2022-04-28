@@ -1,18 +1,28 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration, "AzureAdB2C");
+builder.Services.AddAuthorization();
+builder.Services.AddCors(options => options.AddPolicy("allowAny", o => o.AllowAnyOrigin()));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDbContext<TodoDb>(opt => opt.UseInMemoryDatabase("TodoList"));
 var app = builder.Build();
 
 app.MapGet("/todoitems", async (TodoDb db) =>
-    await db.Todos.Select(x => new TodoItemDTO(x)).ToListAsync());
+    await db.Todos.Select(x => new TodoItemDTO(x)).ToListAsync())
+    .RequireAuthorization();
 
 app.MapGet("/todoitems/{id}", async (int id, TodoDb db) =>
     await db.Todos.FindAsync(id)
         is Todo todo
             ? Results.Ok(new TodoItemDTO(todo))
-            : Results.NotFound());
+            : Results.NotFound())
+    .RequireAuthorization();
 
 app.MapPost("/todoitems", async (TodoItemDTO todoItemDTO, TodoDb db) =>
 {
@@ -26,7 +36,8 @@ app.MapPost("/todoitems", async (TodoItemDTO todoItemDTO, TodoDb db) =>
     await db.SaveChangesAsync();
 
     return Results.Created($"/todoitems/{todoItem.Id}", new TodoItemDTO(todoItem));
-});
+})
+    .RequireAuthorization();
 
 app.MapPut("/todoitems/{id}", async (int id, TodoItemDTO todoItemDTO, TodoDb db) =>
 {
@@ -40,7 +51,8 @@ app.MapPut("/todoitems/{id}", async (int id, TodoItemDTO todoItemDTO, TodoDb db)
     await db.SaveChangesAsync();
 
     return Results.NoContent();
-});
+})
+    .RequireAuthorization();
 
 app.MapDelete("/todoitems/{id}", async (int id, TodoDb db) =>
 {
@@ -52,8 +64,13 @@ app.MapDelete("/todoitems/{id}", async (int id, TodoDb db) =>
     }
 
     return Results.NotFound();
-});
+})
+    .RequireAuthorization();
 
+app.UseAuthentication();
+app.UseHttpsRedirection();
+app.UseCors();
+app.UseAuthorization();
 app.Run();
 
 public class Todo
