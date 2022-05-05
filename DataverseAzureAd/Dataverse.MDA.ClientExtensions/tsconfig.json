@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "System",
+    "sourceMap": true,
+    "outDir": "Scripts",
+    "rootDir": "src"
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

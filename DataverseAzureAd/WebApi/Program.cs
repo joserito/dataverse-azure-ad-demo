@@ -1,8 +1,5 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,14 +12,16 @@ var app = builder.Build();
 
 app.MapGet("/todoitems", async (TodoDb db) =>
     await db.Todos.Select(x => new TodoItemDTO(x)).ToListAsync())
-    .RequireAuthorization();
+    .RequireAuthorization()
+    .RequireScope("ToDo.Read");
 
 app.MapGet("/todoitems/{id}", async (int id, TodoDb db) =>
     await db.Todos.FindAsync(id)
         is Todo todo
             ? Results.Ok(new TodoItemDTO(todo))
             : Results.NotFound())
-    .RequireAuthorization();
+    .RequireAuthorization()
+    .RequireScope("ToDo.Read");
 
 app.MapPost("/todoitems", async (TodoItemDTO todoItemDTO, TodoDb db) =>
 {
@@ -37,7 +36,8 @@ app.MapPost("/todoitems", async (TodoItemDTO todoItemDTO, TodoDb db) =>
 
     return Results.Created($"/todoitems/{todoItem.Id}", new TodoItemDTO(todoItem));
 })
-    .RequireAuthorization();
+    .RequireAuthorization()
+    .RequireScope("ToDo.Write");
 
 app.MapPut("/todoitems/{id}", async (int id, TodoItemDTO todoItemDTO, TodoDb db) =>
 {
@@ -52,7 +52,8 @@ app.MapPut("/todoitems/{id}", async (int id, TodoItemDTO todoItemDTO, TodoDb db)
 
     return Results.NoContent();
 })
-    .RequireAuthorization();
+    .RequireAuthorization()
+    .RequireScope("ToDo.Write");
 
 app.MapDelete("/todoitems/{id}", async (int id, TodoDb db) =>
 {
@@ -65,7 +66,8 @@ app.MapDelete("/todoitems/{id}", async (int id, TodoDb db) =>
 
     return Results.NotFound();
 })
-    .RequireAuthorization();
+    .RequireAuthorization()
+    .RequireScope("ToDo.Write");
 
 app.UseAuthentication();
 app.UseHttpsRedirection();
