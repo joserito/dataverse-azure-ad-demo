@@ -1,12 +1,11 @@
 {
   "compilerOptions": {
+    "module": "ES6",
+    "lib": ["ES6","dom"],
     "target": "ES6",
-    "module": "System",
+    "rootDir": "src",
+    "moduleResolution": "node",
     "sourceMap": true,
-    "outDir": "Scripts",
-    "rootDir": "src"
-  },
-  "exclude": [
-    "node_modules"
-  ]
+    "allowSyntheticDefaultImports": true
+  }
 }
